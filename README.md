@@ -1,3 +1,21 @@
+In GitHub webhooks, the “secret” is not centrally stored in GitHub in a retrievable way, and it’s also not owned by GitHub long-term in a usable form.
+So the real answer is:
+The system that created/configured the webhook owns the secret and must manage rotation.
+
+if webhook is deleted in github
+Immediate effect
+1. GitHub stops sending events instantly
+No more webhook POST requests
+No retries
+No background queue
+
+👉 From GitHub’s perspective, the integration is gone.
+
+🔐 What happens to the Jira-held secret
+Jira still keeps its stored secret/config
+It becomes orphaned configuration
+ 
+
 # GitHub Webhook Cleanup Toolkit
 
 This toolkit helps you safely audit, disable, and delete unused GitHub webhooks.

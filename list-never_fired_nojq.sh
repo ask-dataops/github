@@ -1,44 +1,39 @@
 #!/bin/bash
 
 ORG="your-org"
+REPO="your-repo"
+TOKEN="ghp_xxx"
+
+API="https://api.github.com"
+
+echo "Checking repo: $ORG/$REPO"
+
+hooks=$(curl -s -H "Authorization: token $TOKEN" \
+"$API/repos/$ORG/$REPO/hooks")
+
+echo "$hooks" | python3 - <<'PY'
+import json, subprocess
+
+import sys
+
+hooks = json.load(sys.stdin)
+
+ORG="your-org"
+REPO="your-repo"
 TOKEN="ghp_xxx"
 API="https://api.github.com"
 
-echo "Listing NEVER-FIRED webhooks (ABC anywhere, case-insensitive)..."
+for h in hooks:
+    hid = h["id"]
+    url = h["config"].get("url","")
 
-curl -s -H "Authorization: token $TOKEN" \
-"$API/orgs/$ORG/repos?per_page=100" | python3 - <<'PY'
-
-import sys, json, subprocess
-
-data = json.load(sys.stdin)
-
-for repo in data:
-    name = repo["name"]
-
-    if "abc" not in name.lower():
-        continue
-
-    print(f"\n=== Repo: {name} ===")
-
-    hooks = subprocess.check_output([
+    cmd = [
         "curl","-s","-H",f"Authorization: token {TOKEN}",
-        f"{API}/repos/{ORG}/{name}/hooks"
-    ])
+        f"{API}/repos/{ORG}/{REPO}/hooks/{hid}/deliveries"
+    ]
 
-    hooks = json.loads(hooks)
+    deliveries = json.loads(subprocess.check_output(cmd))
 
-    for h in hooks:
-        hid = h["id"]
-        url = h["config"].get("url","")
-
-        deliveries = subprocess.check_output([
-            "curl","-s","-H",f"Authorization: token {TOKEN}",
-            f"{API}/repos/{ORG}/{name}/hooks/{hid}/deliveries"
-        ])
-
-        deliveries = json.loads(deliveries)
-
-        if len(deliveries) == 0:
-            print(f"NEVER FIRED -> {hid} -> {url}")
+    if len(deliveries) == 0:
+        print(f"NEVER FIRED -> {hid} -> {url}")
 PY

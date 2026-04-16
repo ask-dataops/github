@@ -1,6 +1,7 @@
 import requests
 import csv
 import sys
+import subprocess
 
 ORG = "your-org"
 TOKEN = "ghp_xxx"
@@ -79,6 +80,12 @@ def main():
 
                 count += 1
                 print(f"[MATCH] {name}")
+                subprocess.run([
+                    "python",
+                    "webhook_to_csv_v2.py",
+                    repo.get("name")
+               ])
+
 
             page += 1
 

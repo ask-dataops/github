@@ -1,7 +1,6 @@
 import sys
 import requests
 import csv
-import json
 
 ORG = "your-org"
 TOKEN = "ghp_xxx"
@@ -18,17 +17,17 @@ headers = {
 resp = requests.get(url, headers=headers)
 hooks = resp.json()
 
-csv_file = "webhook_output.csv"
+csv_file = "webhook_payload_urls.csv"
 
 with open(csv_file, "a", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
 
     for h in hooks:
+        payload_url = h.get("config", {}).get("url")  # GitHub field
+
         writer.writerow([
             repo,
-            h.get("id"),
-            h.get("active"),
-            json.dumps(h)   # FULL PAYLOAD
+            payload_url
         ])
 
 print(f"Processed {repo}")
